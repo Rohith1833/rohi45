@@ -1,0 +1,39 @@
+# IDE/System
+.vscode/
+.idea/
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+backend/backend/node_modules/
+
+# Build/Dist
+dist/
+dist-ssr/
+build/
+.next/
+out/
+backend/.next/
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+frontend/.env
+backend/.env
+backend/backend/.env
+
+# Local Setup (Optional to ignore, but usually good to keep)
+# package-lock.json
+# frontend/package-lock.json
+# backend/package-lock.json
+# backend/backend/package-lock.json
