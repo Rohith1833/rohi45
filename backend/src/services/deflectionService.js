@@ -1,15 +1,15 @@
 /**
- * L1 Deflection Logic: PURE Synchronous Decision Engine
+ * Synchronous L1 Deflection Decider (Part 3)
+ * Pure sync engine responsible ONLY for deflection math. No side effects.
  */
 const checkDeflection = (result) => {
   if (!result || typeof result !== 'object') return { deflected: false };
 
-  // ONLY RULE: Deflect iff it's an L1 issue AND severity is LOW
+  // Only mathematically deflect if explicit L1 intent against LOW risk
   if (result.isL1 === true && result.severity === "LOW") {
     return { deflected: true, autoReply: result.replyDraft };
   }
 
-  // Default to escalation (catch-all for missing fields, MEDIUM/HIGH severity, etc)
   return { deflected: false };
 };
 
