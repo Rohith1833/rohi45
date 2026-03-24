@@ -27,8 +27,9 @@ const processMessage = async (message) => {
   try {
     analysis = await withTimeout(analyzeWithLLM(message), env.LLM_TIMEOUT_MS);
   } catch (error) {
-    logger.warn(`Analyze flow switched to fallback after AI failure: ${error.message}`);
-    return getFallback(message);
+    logger.warn(`AI analysis failed: ${error.message}. Switching to fallback for persistence.`);
+    const fallback = getFallback(message);
+    analysis = fallback.analysis;
   }
 
   const deflection = checkDeflection(analysis);
@@ -44,6 +45,7 @@ const processMessage = async (message) => {
   try {
     ticket = await ticketService.createTicket(message, analysis);
   } catch (error) {
+    logger.error(`DATABASE FAILURE during ticket creation: ${error.message}`);
     logger.warn(`Analyze flow switched to fallback after DB failure: ${error.message}`);
     return getFallback(message);
   }

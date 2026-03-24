@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Clock, Inbox, Search } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Inbox, Search, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { useTicketStore } from '../store/useTicketStore';
@@ -17,14 +16,14 @@ export default function Tickets() {
     initializeTickets();
   }, [initializeTickets]);
 
-  const severityWeight = { High: 3, Medium: 2, Low: 1 };
+  const severityWeight = { HIGH: 3, MEDIUM: 2, LOW: 1 };
   const filteredTickets = [...tickets]
-    .filter((ticket) => ticket.summary.toLowerCase().includes(searchQuery.toLowerCase()) || ticket.id.toLowerCase().includes(searchQuery.toLowerCase()))
-    .filter((ticket) => activeTab === 'all' || (activeTab === 'active' ? ticket.status !== 'Resolved' : ticket.status === 'Resolved'))
-    .sort((left, right) => {
-      if (left.status === 'Resolved' && right.status !== 'Resolved') return 1;
-      if (left.status !== 'Resolved' && right.status === 'Resolved') return -1;
-      return severityWeight[right.severity] - severityWeight[left.severity];
+    .filter((t) => t.summary.toLowerCase().includes(searchQuery.toLowerCase()) || t.id.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((t) => activeTab === 'all' || (activeTab === 'active' ? t.status !== 'Resolved' : t.status === 'Resolved'))
+    .sort((a, b) => {
+      if (a.status === 'Resolved' && b.status !== 'Resolved') return 1;
+      if (a.status !== 'Resolved' && b.status === 'Resolved') return -1;
+      return (severityWeight[b.severity?.toUpperCase()] || 0) - (severityWeight[a.severity?.toUpperCase()] || 0);
     });
 
   const handleResolve = async (id) => {
@@ -32,132 +31,106 @@ export default function Tickets() {
       await resolveTicket(id);
       setSelectedTicketId(null);
       toast.success(`Ticket ${id} marked as resolved`);
-    } catch (resolveError) {
-      toast.error(resolveError.message);
+    } catch (e) {
+      toast.error(e.message);
     }
   };
 
   const handleDelete = async (id) => {
     try {
       await deleteTicket(id);
-      if (selectedTicketId === id) {
-        setSelectedTicketId(null);
-      }
+      if (selectedTicketId === id) setSelectedTicketId(null);
       toast.success(`Ticket ${id} deleted`);
-    } catch (deleteError) {
-      toast.error(deleteError.message);
+    } catch (e) {
+      toast.error(e.message);
     }
   };
 
-  const selectedTicket = tickets.find((ticket) => ticket.id === selectedTicketId);
+  const selectedTicket = tickets.find((t) => t.id === selectedTicketId);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-[1400px] mx-auto space-y-6 md:space-y-12 pb-20 font-sans"
-    >
+    <div className="max-w-6xl mx-auto space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">All Tickets</h1>
-          <p className="text-slate-500 font-bold text-xs uppercase tracking-widest">Incident History & Current Backlog</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Support Pipeline</h1>
+          <p className="text-slate-500 text-sm">Manage and resolve incoming AI-analyzed incidents.</p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-[#0f1423] border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-xl overflow-hidden min-h-[500px] md:min-h-[600px]">
-        <div className="px-10 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 flex items-center justify-between gap-6">
-          <div className="flex items-center gap-8">
-            <TabButton active={activeTab === 'active'} onClick={() => setActiveTab('active')}>Active Pipeline</TabButton>
+      <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+        <div className="px-8 py-5 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-6">
+            <TabButton active={activeTab === 'active'} onClick={() => setActiveTab('active')}>Active</TabButton>
             <TabButton active={activeTab === 'resolved'} onClick={() => setActiveTab('resolved')}>Resolved</TabButton>
             <TabButton active={activeTab === 'all'} onClick={() => setActiveTab('all')}>History</TabButton>
           </div>
-          <div className="relative w-80 group">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-brand-500 transition-colors" />
+          <div className="relative w-full md:w-64 group">
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by ID or issue..."
+              placeholder="Filter tickets..."
               value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl py-2.5 pl-12 pr-4 text-sm font-bold focus:ring-8 focus:ring-brand-500/5 focus:border-brand-500/50 transition-all placeholder:text-slate-400"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white border border-slate-200 rounded-xl py-2 pl-10 pr-4 text-xs font-medium focus:ring-2 focus:ring-slate-900/5 transition-all outline-none"
             />
           </div>
         </div>
 
         <div className="overflow-x-auto">
           {isLoading ? (
-            <EmptyState title="Loading tickets" description="Fetching the latest support queue from the backend." icon={Clock} />
+            <div className="py-20 flex flex-col items-center justify-center text-slate-400 gap-3">
+              <Clock size={24} className="animate-spin" />
+              <p className="text-sm font-medium">Syncing with backend...</p>
+            </div>
           ) : filteredTickets.length === 0 ? (
             <EmptyState title="All caught up" description="No tickets match the current filters." icon={Inbox} />
           ) : (
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-slate-50 dark:border-slate-800 text-[10px] text-slate-400 font-black uppercase tracking-[0.25em]">
-                  <th className="px-10 py-6">ID</th>
-                  <th className="px-8 py-6">Summary</th>
-                  <th className="px-8 py-6">Account</th>
-                  <th className="px-8 py-6">Tier</th>
-                  <th className="px-8 py-6">Detected</th>
-                  <th className="px-10 py-6 text-right">Actions</th>
+                <tr className="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                  <th className="px-8 py-4">ID</th>
+                  <th className="px-6 py-4">Summary</th>
+                  <th className="px-6 py-4">Category</th>
+                  <th className="px-6 py-4">Urgency</th>
+                  <th className="px-8 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50 dark:divide-slate-800 text-sm font-bold">
-                {filteredTickets.map((ticket) => (
-                  <motion.tr
-                    key={ticket.id}
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    onClick={() => ticket.status !== 'Resolved' && setSelectedTicketId(ticket.id)}
+              <tbody className="divide-y divide-slate-50 text-sm">
+                {filteredTickets.map((t) => (
+                  <tr
+                    key={t.id}
+                    onClick={() => t.status !== 'Resolved' && setSelectedTicketId(t.id)}
                     className={cn(
-                      'group cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-800/30 relative',
-                      selectedTicketId === ticket.id && 'bg-brand-500/5 dark:bg-brand-500/10',
-                      ticket.status === 'Resolved' && 'opacity-40 grayscale'
+                      'group cursor-pointer transition-colors hover:bg-slate-50/50',
+                      selectedTicketId === t.id && 'bg-slate-50/80',
+                      t.status === 'Resolved' && 'opacity-50 grayscale-[50%]'
                     )}
                   >
-                    <td className="px-10 py-6 font-mono text-[11px] text-slate-400 uppercase tracking-tighter relative">
-                      {selectedTicketId === ticket.id && (
-                        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-brand-600 shadow-xl" />
-                      )}
-                      {ticket.id}
+                    <td className="px-8 py-5 font-mono text-[11px] text-slate-400">{t.id}</td>
+                    <td className="px-6 py-5">
+                      <p className="text-slate-900 font-semibold truncate max-w-sm">{t.summary}</p>
                     </td>
-                    <td className="px-8 py-6">
-                      <p className="text-slate-900 dark:text-white group-hover:text-brand-600 transition-colors truncate max-w-[280px] font-black tracking-tight leading-tight">{ticket.summary}</p>
+                    <td className="px-6 py-5">
+                      <span className="text-xs text-slate-500 font-medium">{t.category}</span>
                     </td>
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400 italic border border-slate-200/50">
-                          {ticket.user.company.charAt(0)}
-                        </div>
-                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{ticket.user.company}</span>
-                      </div>
+                    <td className="px-6 py-5">
+                      <Badge variant={t.severity?.toUpperCase() === 'HIGH' ? 'danger' : t.severity?.toUpperCase() === 'MEDIUM' ? 'warning' : 'success'}>
+                        {t.severity}
+                      </Badge>
                     </td>
-                    <td className="px-8 py-6">
-                      <Badge variant={ticket.severity === 'High' ? 'danger' : ticket.severity === 'Medium' ? 'warning' : 'success'}>{ticket.severity}</Badge>
-                    </td>
-                    <td className="px-8 py-6 text-slate-400 text-xs font-bold font-mono">
-                      {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}
-                    </td>
-                    <td className="px-10 py-6 text-right">
+                    <td className="px-8 py-5 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {ticket.status === 'Resolved' ? <Badge variant="success">RESOLVED</Badge> : (
-                          <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 border border-slate-100 dark:border-slate-800 rounded-xl px-4">
-                            Details
-                          </Button>
-                        )}
-                        <Button
+                         <Button
                           size="sm"
                           variant="ghost"
-                          className="opacity-0 group-hover:opacity-100 border border-rose-100 text-rose-600 rounded-xl px-4"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleDelete(ticket.id);
-                          }}
+                          className="text-rose-600 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
                         >
                           Delete
                         </Button>
                       </div>
                     </td>
-                  </motion.tr>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -165,29 +138,27 @@ export default function Tickets() {
         </div>
       </div>
 
-      <AnimatePresence>
-        {selectedTicket && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedTicketId(null)} className="fixed inset-0 bg-slate-900/40 z-40" />
-            <CopilotPanel ticket={selectedTicket} onClose={() => setSelectedTicketId(null)} onResolve={handleResolve} />
-          </>
-        )}
-      </AnimatePresence>
-
-      {error && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-700">
-          Backend error: {error}
+      {selectedTicket && (
+        <div className="fixed inset-0 z-50 flex items-center justify-end">
+          <div onClick={() => setSelectedTicketId(null)} className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" />
+          <CopilotPanel ticket={selectedTicket} onClose={() => setSelectedTicketId(null)} onResolve={handleResolve} />
         </div>
       )}
-    </motion.div>
+      
+      {error && (
+        <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl text-xs font-bold text-rose-600">
+           Connection Error: {error}
+        </div>
+      )}
+    </div>
   );
 }
 
 function TabButton({ children, active, onClick }) {
   return (
-    <button onClick={onClick} className={cn('px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] relative', active ? 'text-brand-600' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white')}>
+    <button onClick={onClick} className={cn('px-1 py-1 text-[11px] font-bold uppercase tracking-widest relative transition-colors', active ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600')}>
       {children}
-      {active && <motion.div layoutId="tickets-tab" className="absolute -bottom-4 left-0 right-0 h-1 bg-brand-600 rounded-full" />}
+      {active && <div className="absolute -bottom-5 left-0 right-0 h-0.5 bg-slate-900" />}
     </button>
   );
 }

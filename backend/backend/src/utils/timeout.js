@@ -1,4 +1,4 @@
-const withTimeout = (promise, ms = 4000) =>
+const withTimeout = (promise, ms = 30000) =>
   Promise.race([
     promise,
     new Promise((_, reject) => {

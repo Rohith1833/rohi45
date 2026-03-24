@@ -32,7 +32,7 @@ export default function KeywordManager({ isOpen, onClose }) {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-lg bg-white dark:bg-[#0f1423] border border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden font-sans"
+            className="relative w-full max-w-lg bg-white dark:bg-[#0f1423] border border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-xl overflow-hidden font-sans"
           >
              {/* Header */}
              <div className="p-8 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 flex items-center justify-between">
@@ -59,7 +59,7 @@ export default function KeywordManager({ isOpen, onClose }) {
                     placeholder="Register new intelligence trigger..." 
                     value={newKeyword}
                     onChange={(e) => setNewKeyword(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-[1.5rem] py-4 pl-14 pr-16 text-sm font-bold text-slate-900 dark:text-white focus:ring-8 focus:ring-brand-500/5 focus:border-brand-500/50 transition-all placeholder:text-slate-400 placeholder:font-bold italic" 
+                    className="w-full bg-slate-900 border-2 border-slate-800 rounded-[1.5rem] py-4 pl-14 pr-16 text-sm font-bold text-white focus:ring-8 focus:ring-brand-500/5 focus:border-brand-500/50 transition-all placeholder:text-slate-400 placeholder:font-bold italic" 
                    />
                    <button 
                     type="submit"

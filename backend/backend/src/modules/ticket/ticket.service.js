@@ -47,7 +47,7 @@ const createTicket = async (message, analysis) => {
     throw new Error('Simulated MongoDB disconnection');
   }
 
-  return Ticket.create({
+  const ticket = await Ticket.create({
     id: `tkt_${uuidv4()}`,
     message: message.substring(0, 150),
     severity: analysis.severity || 'MEDIUM',
@@ -59,6 +59,8 @@ const createTicket = async (message, analysis) => {
     suggestedAction: analysis.suggestedAction || 'Manual review',
     status: 'Open',
   });
+  logger.success(`Ticket created successfully: ${ticket.id}`);
+  return ticket;
 };
 
 const getTicketById = async (id) => {
@@ -82,6 +84,7 @@ const getTicketById = async (id) => {
 const getTickets = async () => {
   try {
     const tickets = await Ticket.find().sort({ createdAt: -1 }).lean();
+    logger.info(`Fetched ${tickets.length} tickets from database.`);
 
     return {
       tickets,

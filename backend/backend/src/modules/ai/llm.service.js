@@ -1,4 +1,5 @@
 const { OpenAI } = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const env = require('../../config/env');
 const logger = require('../../utils/logger');
 const {
@@ -57,18 +58,26 @@ const simulateTestBehavior = async (message) => {
   return null;
 };
 
-const analyzeWithLLM = async (message) => {
-  const simulation = await simulateTestBehavior(message);
-  if (simulation) {
-    return simulation;
+const callGemini = async (message) => {
+  if (!env.GEMINI_API_KEY || env.GEMINI_API_KEY.includes('Your_key_here')) {
+    throw new Error('GEMINI_API_KEY not correctly configured');
   }
 
-  const stub = getStub(message);
-  if (stub) {
-    logger.info(`Using demo stub for message: ${message.substring(0, 50)}`);
-    return stub;
-  }
+  const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+  const model = genAI.getGenerativeModel({
+    model: env.MODEL_NAME,
+    generationConfig: {
+      responseMimeType: "application/json",
+    },
+  });
 
+  const prompt = `${SYSTEM_INSTRUCTION}\n\n${buildAnalyzePrompt(message)}`;
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  return JSON.parse(response.text());
+};
+
+const callOpenAI = async (message) => {
   if (!env.OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY not configured');
   }
@@ -85,9 +94,29 @@ const analyzeWithLLM = async (message) => {
     max_tokens: 400,
   });
 
-  const raw = JSON.parse(response.choices[0].message.content);
-  const normalized = normalize(raw);
+  return JSON.parse(response.choices[0].message.content);
+};
 
+const analyzeWithLLM = async (message) => {
+  const simulation = await simulateTestBehavior(message);
+  if (simulation) {
+    return simulation;
+  }
+
+  const stub = getStub(message);
+  if (stub) {
+    logger.info(`Using demo stub for message: ${message.substring(0, 50)}`);
+    return stub;
+  }
+
+  let raw;
+  if (env.LLM_PROVIDER === 'gemini') {
+    raw = await callGemini(message);
+  } else {
+    raw = await callOpenAI(message);
+  }
+
+  const normalized = normalize(raw);
   if (!normalized) {
     throw new Error('AI returned invalid JSON structure');
   }

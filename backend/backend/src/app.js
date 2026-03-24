@@ -1,15 +1,11 @@
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/db');
 const env = require('./config/env');
 const apiRoutes = require('./routes');
 const notFoundMiddleware = require('./middleware/notFound.middleware');
 const errorMiddleware = require('./middleware/error.middleware');
 
 const app = express();
-
-// Connect once during bootstrap so all modules share the same DB lifecycle.
-connectDB();
 
 const allowedOrigins = [env.FRONTEND_URL, 'http://localhost:3000', 'http://localhost:3001'];
 
@@ -19,12 +15,12 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-
       return callback(new Error(`CORS blocked for origin: ${origin}`));
     },
     credentials: true,
   })
 );
+
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/health', (req, res) => {
