@@ -23,13 +23,14 @@ const checkDeflection = (analysis) => {
 
 const processMessage = async (message) => {
   let analysis;
+  let isFallbackMode = false;
 
   try {
     analysis = await withTimeout(analyzeWithLLM(message), env.LLM_TIMEOUT_MS);
   } catch (error) {
     logger.warn(`AI analysis failed: ${error.message}. Switching to fallback for persistence.`);
     const fallback = getFallback(message);
-    analysis = fallback.analysis;
+    return fallback; // Return full fallback response when LLM fails
   }
 
   const deflection = checkDeflection(analysis);

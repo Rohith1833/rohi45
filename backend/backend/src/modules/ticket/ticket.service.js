@@ -117,7 +117,7 @@ const updateTicket = async (id, updates) => {
 
   try {
     const ticket = await Ticket.findOneAndUpdate({ id }, safeUpdates, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     });
 
@@ -165,7 +165,7 @@ const deleteTicket = async (id) => {
 
 const attachCopilot = async (id, copilot) => {
   try {
-    await Ticket.findOneAndUpdate({ id }, { copilot }, { new: true });
+    await Ticket.findOneAndUpdate({ id }, { copilot }, { returnDocument: 'after' });
   } catch (error) {
     logger.warn(`Copilot payload was not persisted: ${error.message}`);
   }
